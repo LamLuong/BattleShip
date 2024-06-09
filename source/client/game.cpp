@@ -66,16 +66,27 @@ int Game::GameUpdate() {
 
 int Game::HandleEvents() {
   SDL_Event event;
+  if (SDL_PollEvent(&event)) {
+    int x_button_mouse = event.button.x;
+	  int y_button_mouse = event.button.y;
 
-  if(SDL_PollEvent(&event)){
+	  int x_motion_mouse = event.motion.x;
+	  int y_motion_mouse = event.motion.y;
+
     switch(event.type){
       case SDL_QUIT:
         is_running_ = false;
         break;
+      case SDL_MOUSEBUTTONDOWN:
+        printf("%d %d %d %d \n", x_button_mouse, y_button_mouse, x_motion_mouse, y_motion_mouse);
+        break;
+
+      case SDL_MOUSEMOTION:
+        printf("%d %d %d %d \n", x_button_mouse, y_button_mouse, x_motion_mouse, y_motion_mouse);
+        break;
 
       default:
-      break;
-
+        break;
     } 
   }
   return 0;
