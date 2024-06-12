@@ -2,13 +2,15 @@
 #define GAME_H
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
+#include <map>
 
-#include "item.h"
+#include "img_object.h"
 
 class Game {
  public:
 	~Game();
-	int Initital(const char* name, int x, int y, int w, int h);
+	int Initital(const std::string& config_path);
 	int Render();
 	int HandleEvents();
 	int GameUpdate();
@@ -29,7 +31,7 @@ class Game {
 	SDL_Renderer* game_render_;
 	static Game* instance_;
 
-	Item* item1;
+	std::map<std::string, ImgObject*> objs_;
 };
 
 #endif /* GAME_H */

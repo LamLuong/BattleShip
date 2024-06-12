@@ -1,5 +1,8 @@
 #include "game.h"
 
+#include <fstream>
+#include <sstream>
+
 Game *Game::instance_ = NULL;
 
 Game::Game () {
@@ -18,21 +21,25 @@ Game::~Game () {
     game_window_ = NULL;
   }
 
-  if (item1) {
-    delete item1;
-    item1 = NULL;
+  for (auto obj : objs_) {
+    if (obj.second)
+      delete obj.second;
+    obj.second = NULL;
   }
+  objs_.clear();
 
   SDL_Quit();
 }
 
-int Game::Initital(const char* name, int x, int y, int w, int h) {
+int Game::Initital(const std::string& config_path) {
   if (SDL_Init(SDL_INIT_EVERYTHING)) {
     printf("SDL Error: Failed to init SDL.\n");
     return -1;
   }
 
-  game_window_ = SDL_CreateWindow(name, x, y, w, h, SDL_WINDOW_SHOWN);
+  game_window_ = SDL_CreateWindow("Hello Lam", SDL_WINDOWPOS_CENTERED,
+                                  SDL_WINDOWPOS_CENTERED, 670, 550,
+                                  SDL_WINDOW_SHOWN);
   if (!game_window_) {
     printf("SDL Error: Failed to create window: %s .\n", SDL_GetError());
     return -1;
@@ -45,22 +52,43 @@ int Game::Initital(const char* name, int x, int y, int w, int h) {
   }
   is_running_ = true;
 
-  item1 = new Item();
-  item1->CreateTexture("/home/lamlt/Downloads/animate-alpha.png", "item1", game_render_);
+  std::ifstream fin(config_path);
+	std::string line;
+	std::string::size_type sz;
+  ImgObject *img_obj = NULL;
+	while (std::getline(fin, line)) {
+		std::istringstream in(line);
+		std::string option, id, path, x_val, y_val, n_part;
 
+    in >> option >> id >> path >> x_val >> y_val >> n_part;
+    if (option.compare("background") == 0) {
+      img_obj = new Background();
+    } else if (option.compare("coordinate") == 0) {
+      img_obj = new CoordinateManager();
+    }
+
+    img_obj->CreateTexture(path, id, game_render_);
+    img_obj->InitPosition(Point(std::atoi(x_val.c_str()),
+                                     std::atoi(y_val.c_str())));
+    img_obj->SetSlidePart(std::atoi(n_part.c_str()));
+    objs_[id] = img_obj;
+  }
   return 0;
 }
 
 int Game::Render() {
   SDL_RenderClear(game_render_);
 
-  item1->Draw(game_render_);
+  for (auto obj : objs_)
+    obj.second->Draw(game_render_);
+
   SDL_RenderPresent(game_render_);
   return 0;
 }
 
 int Game::GameUpdate() {
-  item1->Update();
+  for (auto obj : objs_)
+    obj.second->Update();
   return 0;
 }
 
@@ -78,11 +106,11 @@ int Game::HandleEvents() {
         is_running_ = false;
         break;
       case SDL_MOUSEBUTTONDOWN:
-        printf("%d %d %d %d \n", x_button_mouse, y_button_mouse, x_motion_mouse, y_motion_mouse);
+        
         break;
 
       case SDL_MOUSEMOTION:
-        printf("%d %d %d %d \n", x_button_mouse, y_button_mouse, x_motion_mouse, y_motion_mouse);
+        
         break;
 
       default:
